@@ -3,13 +3,17 @@
 
 
 # Application Name
-Description of the application. 
+
+BC Registries Names Examination, research and approval system API
 
 ## Technology Stack Used
+* Python, Flask
+* Postgres -  SQLAlchemy, psycopg2-binary & alembic 
 
 ## Third-Party Products/Libraries used and the the License they are covert by
 
 ## Project Status
+As of 2018-02-22 in **ALPHA**
 
 ## Documnentation
 
@@ -17,7 +21,9 @@ GitHub Pages (https://guides.github.com/features/pages/) are a neat way to docum
 
 ## Security
 
-Authentication, Authorization, Policies, etc
+Future - BCGov Keycloak
+
+Current - JWT hack
 
 ## Files in this repository
 
@@ -53,7 +59,7 @@ By participating in this project you agree to abide by its terms.
 
 ## License
 
-    Copyright 2016 Province of British Columbia
+    Copyright 2018 Province of British Columbia
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
