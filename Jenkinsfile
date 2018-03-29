@@ -19,7 +19,7 @@ containerTemplate(
             checkout scm
 
             echo ">>> building namex-api <<<"
-            openshiftBuild bldCfg: 'namex-api' showBuildLogs: 'true'
+            openshiftBuild bldCfg: 'namex-api', showBuildLogs: 'true'
         }
         stage('Deploy to Dev'){
             echo ">>> get image hash <<<"
