@@ -1,2 +1,16 @@
 gunicorn
+
 Flask
+Flask-Migrate
+Flask-Moment
+Flask-SQLAlchemy
+Flask-RESTplus
+Flask-Marshmallow
+
+python-dotenv
+python-jose-cryptodome
+flask-cors
+psycopg2-binary
+marshmallow
+marshmallow-sqlalchemy
+six

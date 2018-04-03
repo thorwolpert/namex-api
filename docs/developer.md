@@ -82,7 +82,7 @@ git push origin myfeature
 
 ### 7 Create a pull request
 
-1. Visit your fork at https://github.com/<username>/namex-api
+1. Visit your fork at https://github.com/<username>/namex-app
 2. Click the `Compare & Pull Request` button next to your `myfeature` branch.
 
 

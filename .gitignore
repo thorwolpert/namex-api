@@ -65,3 +65,7 @@ venv
 *.ntvs*
 *.njsproj
 *.sln
+
+# Convenience Files
+# ######################
+.env

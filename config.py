@@ -3,8 +3,9 @@ import os
 
 class Config(object):
     SECRET_KEY = os.getenv('API_SERVER_SECRET_KEY')
-
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # POSTGRESQL
     DB_USER = os.getenv('DATABASE_USERNAME', '')
@@ -16,6 +17,6 @@ class Config(object):
          user=DB_USER,
          password=DB_PASSWORD,
          host=DB_HOST,
-         port=DB_PORT,
+         port=int(DB_PORT),
          name=DB_NAME,
     )
