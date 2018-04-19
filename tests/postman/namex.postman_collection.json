@@ -1,0 +1,401 @@
+{
+	"info": {
+		"_postman_id": "b1aeffa3-3364-4301-beb1-bbda25e51f0f",
+		"name": "namex",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "authenticate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a27660f6-b1e5-473c-8149-e5309b672fa7",
+						"type": "text/javascript",
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"pm.environment.set(\"token\", jsonData.access_token);",
+							"pm.environment.set(\"refresh_token\", jsonData.refresh_token);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "grant_type=password&client_id={{clientid}}&username={{userid}}&password={{password}}&client_secret={{client_secret}}"
+				},
+				"url": {
+					"raw": "{{authurl}}/auth/realms/{{realm}}/protocol/openid-connect/token",
+					"host": [
+						"{{authurl}}"
+					],
+					"path": [
+						"auth",
+						"realms",
+						"{{realm}}",
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "authentication-refresh",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3ef30827-b3d6-4518-8dc5-afdc26a7681e",
+						"type": "text/javascript",
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"pm.environment.set(\"token\", jsonData.access_token);",
+							"pm.environment.set(\"refresh_token\", jsonData.refresh_token);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "grant_type=refresh_token&client_id={{clientid}}&refresh_token={{refresh_token}}&client_secret={{client_secret}}"
+				},
+				"url": {
+					"raw": "{{authurl}}/auth/realms/{{realm}}/protocol/openid-connect/token",
+					"host": [
+						"{{authurl}}"
+					],
+					"path": [
+						"auth",
+						"realms",
+						"{{realm}}",
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "requests/queues/@me/oldest",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b8a40ff8-2595-44e3-afb6-843b0e676cba",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"if (typeof jsonData.nameRequest !== 'undefined' || jsonData.nameRequest !== null) {",
+							"   pm.environment.set(\"queued_nr\", jsonData.nameRequest);",
+							"}else{",
+							"   pm.environment.unset(\"queued_nr\");    ",
+							"}",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/api/v1/requests/queues/@me/oldest",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"queues",
+						"@me",
+						"oldest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "requests/queues/@me/oldest getsame again",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "10fb8743-f67b-4540-a06a-391055527a04",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Same value as previous get from queue\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.nameRequest).to.eql( pm.environment.get(\"queued_nr\"));",
+							"});",
+							"",
+							"pm.environment.unset(\"queued_nr\");  ",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/api/v1/requests/queues/@me/oldest",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"queues",
+						"@me",
+						"oldest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "requests/NR00000001",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/api/v1/requests/NR00000001",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"NR00000001"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/requests - create 007",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"submitter\": \"thor\",\n\t\"corpType\": \"INC\",\n\t\"reqType\": \"NEW\"\n}"
+				},
+				"url": {
+					"raw": "{{url}}/api/v1/requests",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/requests - put NR00000001",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"submitter\": \"thor\",\n\t\"corpType\": \"INC\",\n\t\"reqType\": \"NEW\"\n}"
+				},
+				"url": {
+					"raw": "{{url}}/api/v1/requests/NR00000001",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"NR00000001"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/requests/<string:nr> nr==NR00000002",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "54db63b7-4bf8-440a-bfaf-62b2c093bbac",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 204 - Deleted\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/api/v1/requests/NR00000002",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"NR00000002"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/requests/<string:nr> nr==NR00000002 should fail, but still send 204",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "54db63b7-4bf8-440a-bfaf-62b2c093bbac",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 204 - Deleted\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/api/v1/requests/NR",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"NR"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

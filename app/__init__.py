@@ -3,30 +3,32 @@
 
 This module is the API for the Names Examination system
 
-TODO: Fill more of this in
+TODO: Fill in a larger description once the API is defined for V1
 """
 import logging
 from flask import Flask
 from flask_restplus import Api
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
-from flask_migrate import Migrate
+from app.patches.flask_oidc_patched import OpenIDConnect
 
 
-application = Flask(__name__)
+db = SQLAlchemy()
+
+application = Flask(__name__, instance_relative_config=True)
 application.config.from_object(Config)
+application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(application)
+
 api = Api(application, prefix='/api/v1')
 
-db = SQLAlchemy(application)
-migrate = Migrate(application, db)
+oidc = OpenIDConnect(application)
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 # noinspection PyPep8
-from app.models.request import Request
-# noinspection PyPep8
 from app.resources.requests import Request
-
+import app.resources.ops
 
 if __name__ == "__main__":
     application.run()

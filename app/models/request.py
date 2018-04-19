@@ -15,9 +15,14 @@ class Request(db.Model):
     submitter = db.Column(db.String(80))
     corpType = db.Column('corptype', db.String(80))
     reqType = db.Column('reqtype', db.String(80))
-    status = db.Column(db.String(20), default='NEW')
+    status = db.Column(db.String(40), default='NEW')
+    staff = db.Column(db.String(40), default='UNASSIGNED')
+    names = db.relationship('Name', lazy='dynamic')
 
-    # names = db.relationship('NameDAO', lazy='dynamic')
+    STATUS_NEW = 'NEW'
+    STATUS_INPROGRESS ='INPROGRESS'
+    STATUS_CANCELLED = 'CANCELLED'
+
 
     def __init__(self, submitter, corpType, reqType):
         self.submitter = submitter
@@ -30,8 +35,9 @@ class Request(db.Model):
                 'reqType': self.reqType,
                 'submitter': self.submitter,
                 'timestamp': self.timestamp.isoformat(),
-                'status': self.status}
-        # 'names': [name.json() for name in self.names.all()]
+                'staff': self.staff,
+                'status': self.status,
+                'names': [name.json() for name in self.names.all()]}
 
     @classmethod
     def find_by_nr(cls, nr):
@@ -51,12 +57,42 @@ class Request(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    @classmethod
+    def get_queued_oldest(cls, userid):
+        """Gets the Next NR# from the database
+           It sets the STATUS == INPROGRESS
+           and then returns the NR or
+           error out with a SQLAlchemy Error type
+        """
+        existing_nr = db.session.query(Request).\
+            filter(Request.staff == userid, Request.status == Request.STATUS_INPROGRESS).\
+            order_by(Request.timestamp.asc()).\
+            first()
+
+        if existing_nr:
+            return existing_nr.nr
+
+        r = db.session.query(Request).\
+                filter(~Request.status.in_(['CANCELLED', 'INPROGRESS'])).\
+                order_by(Request.timestamp.asc()).\
+                with_for_update().first()
+        # this row is now locked
+
+        r.status= Request.STATUS_INPROGRESS
+        r.staff=userid
+
+        db.session.add(r)
+        db.session.commit()
+        # db.session.close()
+        return r.nr
+
 
 class RequestsSchema(Schema):
     id = fields.Int(dump_only=True)
     nr = fields.String(dump_only=True)
     submitter = fields.String()
     status = fields.String()
+    staff = fields.String()
     corpType = fields.String()
     reqType = fields.String()
 

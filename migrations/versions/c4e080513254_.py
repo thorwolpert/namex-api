@@ -1,16 +1,16 @@
 """empty message
 
-Revision ID: 2a9f711233f8
+Revision ID: c4e080513254
 Revises: 
-Create Date: 2018-03-31 22:42:53.559784
+Create Date: 2018-04-12 02:57:44.917661
 
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.schema import Sequence, CreateSequence
+
 
 # revision identifiers, used by Alembic.
-revision = '2a9f711233f8'
+revision = 'c4e080513254'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,10 +25,11 @@ def upgrade():
     sa.Column('submitter', sa.String(length=80), nullable=True),
     sa.Column('corptype', sa.String(length=80), nullable=True),
     sa.Column('reqtype', sa.String(length=80), nullable=True),
-    sa.Column('status', sa.String(length=20), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('status', sa.String(length=40), nullable=True),
+    sa.Column('staff', sa.String(length=40), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('nr')
     )
-    op.execute(CreateSequence(Sequence('nr_seq')))
     # ### end Alembic commands ###
 
 

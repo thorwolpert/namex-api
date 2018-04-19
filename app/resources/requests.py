@@ -1,79 +1,67 @@
-from flask import request, jsonify
-from flask_restplus import Resource, fields
-from marshmallow import ValidationError
-from app import api
-from sqlalchemy import exc
-import logging
-from app.models.request import Request as RequestDAO, RequestsSchema
+"""Requests used to support the namex API
 
+TODO: Fill in a larger description once the API is defined for V1
+"""
+from flask import request, jsonify, g # _request_ctx_stack
+from flask_restplus import Resource, fields, cors
+from marshmallow import ValidationError
+from app import api, auth_services, oidc
+from sqlalchemy import exc
+from app.utils.util import cors_preflight
+import logging
+
+from app.auth_services import AuthError
+from app.models.request import Request as RequestDAO, RequestsSchema
 
 request_schema = RequestsSchema(many=False)
 request_schemas = RequestsSchema(many=True)
 
-
-# noinspection PyUnresolvedReferences,PyPep8
-@api.route('/requests/queues/<string:queueName>/oldest', methods=['GET'])
-class RequestsNextQueue(Resource):
-
-    # noinspection PyPep8Naming,PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def get(queueName, *args, **kwargs):
-        return request_schema.dump(RequestDAO.query.
-                                  filter_by(status=queueName.upper()).
-                                  order_by(RequestDAO.timestamp.asc()).
-                                  first_or_404())
-
-
-# noinspection PyUnresolvedReferences
-@api.route('/requests/queues/<string:queueName>', methods=['GET'])
-class RequestsQueues(Resource):
-
-    # noinspection PyPep8Naming,PyUnusedLocal,PyUnusedLocal,PyPep8
-    @staticmethod
-    def get(queueName, *args, **kwargs):
-        # noinspection PyPep8
-        return request_schemas.dump(RequestDAO.query.
-                                   filter_by(status=queueName.upper()).
-                                   order_by(RequestDAO.timestamp.asc()).
-                                   all())
-
-
-@api.route('/requests/queues', methods=['GET'])
+@cors_preflight("GET")
+@api.route('/requests/queues/@me/oldest', methods=['GET','OPTIONS'])
 class RequestsQueue(Resource):
+    """Acting like a QUEUE this gets the next NR (just the NR number)
+    and assigns it to your auth id
+    """
 
     # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def get(*args, **kwargs):
-        # return  request_schema.dump(RequestDAO.query.order_by('timestamp desc').first_or_404())
-        return request_schemas.dump(RequestDAO.query.
-                                    order_by(RequestDAO.status.asc(),
-                                             RequestDAO.timestamp.asc()).all())
+    @cors.crossdomain(origin='*')
+    # @auth_services.requires_auth
+    @oidc.accept_token(require_token=True)
+    def get():
+        try:
+            user = g.oidc_token_info['username']
+            nr = RequestDAO.get_queued_oldest(user) #_request_ctx_stack.top.current_user['sub'])
+        except exc.SQLAlchemyError as err:
+            #TODO should put some span trace on the error message
+            logging.log(logging.ERROR, 'error in getting next NR. {}'.format(err))
+            return {"message": "An error occurred getting the next Name Request."}, 500
+        except AttributeError as err:
+            return {"message": "There are no Name Requests to work on."}, 404
+
+        return '{{"nameRequest": "{0}" }}'.format(nr), 200
 
 
-@api.route('/requests/queues/oldest', methods=['GET'])
-class RequestsQueue(Resource):
-
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def get(*args, **kwargs):
-        return request_schema.dump(RequestDAO.query.order_by(RequestDAO.timestamp.asc()).first_or_404())
-
-
-@api.route('/requests', methods=['GET', 'POST'])
+@cors_preflight("POST")
+@api.route('/requests', methods=['POST', 'OPTIONS'])
 class Requests(Resource):
     a_request = api.model('Request', {'submitter': fields.String('The submitter name'),
                                       'corpType': fields.String('The corporation type'),
                                       'reqType': fields.String('The name request type')
                                       })
 
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def get(*args, **kwargs):
-        # return {'NameRequests': list(map(lambda x: x.json(), RequestsDAO.query.all()))}, 200
-        return request_schemas.dump(RequestDAO.query.order_by(RequestDAO.timestamp.asc()).all())
+    @api.errorhandler(AuthError)
+    def handle_auth_error(ex):
+        # response = jsonify(ex.error)
+        # response.status_code = ex.status_code
+        # return response, 401
+        return {}, 401
 
     # noinspection PyUnusedLocal,PyUnusedLocal
     @api.expect(a_request)
+    @cors.crossdomain(origin='*')
+    # @auth_services.requires_auth
+    @oidc.accept_token(require_token=True)
     def post(self, *args, **kwargs):
 
         json_input = request.get_json()
@@ -84,9 +72,6 @@ class Requests(Resource):
             data = request_schema.load(json_input)
         except ValidationError as err:
             return jsonify({'errors': err.messages}), 422
-
-        # if RequestDAO.find_by_nr(data[0].nr):
-        #      return {'message': "A Name Request '{}' already exists.".format(data[0].nr)}, 400
 
         nrd = RequestDAO(submitter=data[0].submitter, corpType=data[0].corpType, reqType=data[0].reqType)
 
@@ -101,18 +86,35 @@ class Requests(Resource):
 
 
 # noinspection PyUnresolvedReferences
-@api.route('/requests/<string:nr>', methods=['GET', 'DELETE'])
+@cors_preflight("GET, PUT, DELETE")
+@api.route('/requests/<string:nr>', methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 class Request(Resource):
 
     @staticmethod
+    @cors.crossdomain(origin='*')
+    # @auth_services.requires_auth
+    @oidc.accept_token(require_token=True)
     def get(nr):
-        return request_schema.dump(RequestDAO.query.filter_by(nr=nr.upper()).first_or_404())
+        # return jsonify(request_schema.dump(RequestDAO.query.filter_by(nr=nr.upper()).first_or_404()))
+        return jsonify(RequestDAO.query.filter_by(nr=nr.upper()).first_or_404().json())
 
     @staticmethod
+    @cors.crossdomain(origin='*')
+    @oidc.accept_token(require_token=True)
     def delete(nr):
         nrd = RequestDAO.find_by_nr(nr)
+        # even if not found we still return a 204, which is expected spec behaviour
         if nrd:
             nrd.status = 'CANCELLED'
             nrd.save_to_db()
 
-        return {'message': 'Name Request cancelled'}, 204
+        return '', 204
+
+    @staticmethod
+    @cors.crossdomain(origin='*')
+    @oidc.accept_token(require_token=True)
+    def put(nr):
+        nrd = RequestDAO.find_by_nr(nr)
+        pass
+
+        return '', 501
