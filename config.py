@@ -2,9 +2,10 @@ import os
 
 
 class Config(object):
-    SECRET_KEY = os.getenv('API_SERVER_SECRET_KEY')
-
+    # SECRET_KEY = os.getenv('API_SERVER_SECRET_KEY')
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # POSTGRESQL
     DB_USER = os.getenv('DATABASE_USERNAME', '')
@@ -16,6 +17,15 @@ class Config(object):
          user=DB_USER,
          password=DB_PASSWORD,
          host=DB_HOST,
-         port=DB_PORT,
+         port=int(DB_PORT),
          name=DB_NAME,
     )
+
+    # OIDC
+    SECRET_KEY = os.getenv('SECRET_KEY','')
+    OIDC_OPENID_REALM = os.getenv('OIDC_OPENID_REALM','')
+    OIDC_CLIENT_SECRETS = 'client_secrets.json'
+    OIDC_USER_INFO_ENABLED = True
+    OIDC_SCOPES = ['openid', 'email', 'profile']
+    TESTING = True,
+    DEBUG =True
