@@ -1,3 +1,5 @@
+"""Name hold a name choice for a Request
+"""
 from app import db
 
 class Name(db.Model):
@@ -5,19 +7,23 @@ class Name(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(1024))
-    status = db.Column(db.String(40), default='NEW')
+    state = db.Column(db.String(15), default='DRAFT')
     choice = db.Column(db.Integer)
+    consumptionDate = db.Column('consumption_date', db.DateTime)
+    remoteNameId = db.Column('remote_name_id', db.BigInteger)
 
-    nr_id = db.Column(db.Integer, db.ForeignKey('requests.id'))
+    nrId = db.Column('nr_id', db.Integer, db.ForeignKey('requests.id'))
     nameRequest = db.relationship('Request')
 
-    def __init__(self, name, choice, nr_id):
+    def __init__(self, name, choice, consumptionDate, remoteNameId, nrId):
         self.name = name
         self.choice = choice
-        self.nr_id = nr_id
+        self.nrId = nrId
+        self.consumptionDate = consumptionDate
+        self.remoteNameId = remoteNameId
 
     def json(self):
-        return {'name': self.name, 'choice': self.choice, 'stats': self.status}
+        return {"name": self.name, "choice": self.choice, "state": self.state, "consumptionDate": self.consumptionDate }
 
     @classmethod
     def find_by_name(cls, name):

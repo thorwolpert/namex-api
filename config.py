@@ -24,8 +24,8 @@ class Config(object):
     # OIDC
     SECRET_KEY = os.getenv('SECRET_KEY','')
     OIDC_OPENID_REALM = os.getenv('OIDC_OPENID_REALM','')
-    OIDC_CLIENT_SECRETS = 'client_secrets/client_secrets.json'
+    OIDC_CLIENT_SECRETS = 'client_secrets/client_secrets.localkc.json'
     OIDC_USER_INFO_ENABLED = True
     OIDC_SCOPES = ['openid', 'email', 'profile']
     TESTING = True,
-    DEBUG =True
+    DEBUG = True

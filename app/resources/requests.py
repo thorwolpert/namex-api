@@ -6,6 +6,7 @@ from flask import request, jsonify, g # _request_ctx_stack
 from flask_restplus import Resource, fields, cors
 from marshmallow import ValidationError
 from app import api, auth_services, oidc
+from app.models import User
 from sqlalchemy import exc
 from app.utils.util import cors_preflight
 import logging
@@ -16,6 +17,18 @@ from app.models.request import Request as RequestDAO, RequestsSchema
 request_schema = RequestsSchema(many=False)
 request_schemas = RequestsSchema(many=True)
 
+# noinspection PyUnresolvedReferences
+@cors_preflight("GET")
+@api.route('/echo', methods=['GET', 'OPTIONS'])
+class Echo(Resource):
+
+    @staticmethod
+    @cors.crossdomain(origin='*')
+    @oidc.accept_token(require_token=True)
+    def get (*args, **kwargs):
+        return jsonify(g.oidc_token_info), 200
+
+
 @cors_preflight("GET")
 @api.route('/requests/queues/@me/oldest', methods=['GET','OPTIONS'])
 class RequestsQueue(Resource):
@@ -23,15 +36,17 @@ class RequestsQueue(Resource):
     and assigns it to your auth id
     """
 
+    # @auth_services.requires_auth
     # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
     @cors.crossdomain(origin='*')
-    # @auth_services.requires_auth
     @oidc.accept_token(require_token=True)
     def get():
         try:
-            user = g.oidc_token_info['username']
-            nr = RequestDAO.get_queued_oldest(user) #_request_ctx_stack.top.current_user['sub'])
+            user = User.find_by_jwtToken(g.oidc_token_info)
+            if not user:
+                user = User.create_from_jwtToken(g.oidc_token_info)
+            nr = RequestDAO.get_queued_oldest(user)
         except exc.SQLAlchemyError as err:
             #TODO should put some span trace on the error message
             logging.log(logging.ERROR, 'error in getting next NR. {}'.format(err))
@@ -40,7 +55,6 @@ class RequestsQueue(Resource):
             return {"message": "There are no Name Requests to work on."}, 404
 
         return '{{"nameRequest": "{0}" }}'.format(nr), 200
-
 
 @cors_preflight("POST")
 @api.route('/requests', methods=['POST', 'OPTIONS'])
@@ -86,8 +100,8 @@ class Requests(Resource):
 
 
 # noinspection PyUnresolvedReferences
-@cors_preflight("GET, PUT, DELETE")
-@api.route('/requests/<string:nr>', methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
+@cors_preflight("GET, PATCH, PUT, DELETE")
+@api.route('/requests/<string:nr>', methods=['GET', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'])
 class Request(Resource):
 
     @staticmethod
@@ -96,7 +110,7 @@ class Request(Resource):
     @oidc.accept_token(require_token=True)
     def get(nr):
         # return jsonify(request_schema.dump(RequestDAO.query.filter_by(nr=nr.upper()).first_or_404()))
-        return jsonify(RequestDAO.query.filter_by(nr=nr.upper()).first_or_404().json())
+        return jsonify(RequestDAO.query.filter_by(nrNum =nr.upper()).first_or_404().json())
 
     @staticmethod
     @cors.crossdomain(origin='*')
@@ -105,7 +119,7 @@ class Request(Resource):
         nrd = RequestDAO.find_by_nr(nr)
         # even if not found we still return a 204, which is expected spec behaviour
         if nrd:
-            nrd.status = 'CANCELLED'
+            nrd.state = RequestDAO.STATE_CANCELLED
             nrd.save_to_db()
 
         return '', 204
@@ -113,7 +127,33 @@ class Request(Resource):
     @staticmethod
     @cors.crossdomain(origin='*')
     @oidc.accept_token(require_token=True)
-    def put(nr):
+    def patch(nr, *args, **kwargs):
+        nrd = RequestDAO.find_by_nr(nr)
+        if not nrd:
+            return jsonify({"message": "NR not found"}), 404
+
+        json_input = request.get_json()
+        if not json_input:
+            return jsonify({'message': 'No input data provided'}), 400
+
+        # Currently only state changes are supported by patching
+        # all these checks to get removed to marshmallow
+        state = json_input.get('state', None)
+        if not state:
+            return jsonify({"message": "state not set"}), 406
+
+        if state not in RequestDAO.VALID_STATES:
+            return jsonify({"message": "not a valid state"}), 406
+
+        nrd.status = state
+        nrd.save_to_db()
+
+        return '', 200
+
+    @staticmethod
+    @cors.crossdomain(origin='*')
+    @oidc.accept_token(require_token=True)
+    def put(nr, *args, **kwargs):
         nrd = RequestDAO.find_by_nr(nr)
         pass
 

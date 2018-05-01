@@ -21,7 +21,7 @@ from jose import jwt
 # APP = Flask(__name__)
 
 
-# Format error response and append status code.
+# Format error response and append state code.
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
