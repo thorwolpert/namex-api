@@ -253,7 +253,7 @@
       "displayName": "Core Name",
       "description": "The name of the Solr core configuration to load.",
       "required": true,
-      "value": "namex-api"
+      "value": ""
     }
   ]
 }
