@@ -17,7 +17,6 @@ db = SQLAlchemy()
 
 application = Flask(__name__, instance_relative_config=True)
 application.config.from_object(Config)
-application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(application)
 
 api = Api(application, prefix='/api/v1')
