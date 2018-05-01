@@ -136,7 +136,7 @@ class Request(db.Model):
 
     @classmethod
     def find_by_nr(cls, nr):
-        return cls.query.filter_by(nr=nr).first()
+        return cls.query.filter_by(nrNum=nr).one()
 
     def save_to_db(self):
         if self.id is None:
