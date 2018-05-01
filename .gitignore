@@ -71,8 +71,8 @@ venv
 
 # Security
 #########################
-client_secrets.json
-client_secrets.*.json
+*client_secrets.json
+*client_secrets.*.json
 
 # Postman
 ########################
