@@ -25,12 +25,20 @@ buildconfig "solr" created
 * If you need to run it against an existing object (not first time) use "| oc replace -f -" instead of "| oc create -f -"
 
 * Deploy
+** Make sure you're in the servicebc-ne-dev namespace
+(venv) NDM050057:openshift vboettch$ oc project servicebc-ne-dev
+Now using project "servicebc-ne-dev" on server "https://console.pathfinder.gov.bc.ca:8443".
 
-oc process -f templates/solr-deploy.json --param-file=solr-deploy.dev.param | oc create -f -
+(venv) NDM050057:openshift vboettch$ oc process -f templates/solr-deploy.json --param-file=solr-deploy.dev.param | oc create -f -
+service "solr" created
+route "solr" created
+persistentvolumeclaim "solr" created
+deploymentconfig "solr" created
 
 * And tag
 
-oc tag servicebc-ne-tools/solr:latest servicebc-ne-tools/solr:dev
+(venv) NDM050057:openshift vboettch$ oc tag servicebc-ne-tools/solr:latest servicebc-ne-tools/solr:dev
+Tag solr:dev set to servicebc-ne-tools/solr@sha256:184122663e61dbc27003242d9493aedfd84219b3a079ce0181638717090c959b.
 
 
 
