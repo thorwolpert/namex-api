@@ -190,7 +190,7 @@ class RequestsSchema(Schema):
     id = fields.Int(dump_only=True)
     nr = fields.String(dump_only=True)
     submitter = fields.String()
-    status = fields.String()
+    state = fields.String()
     staff = fields.String()
     corpType = fields.String()
     reqType = fields.String()
