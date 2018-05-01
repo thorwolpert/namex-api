@@ -7,7 +7,7 @@ from flask_restplus import Resource, fields, cors
 from marshmallow import ValidationError
 from app import api, auth_services, oidc
 from app.models import User
-from sqlalchemy import exc
+from sqlalchemy.orm.exc import NoResultFound
 from app.utils.util import cors_preflight
 import logging
 
@@ -150,17 +150,16 @@ class Request(Resource):
             nrd = RequestDAO.find_by_nr(nr)
             if not nrd:
                 return jsonify({"message": "NR not found"}), 404
-        except exc.NoResultFound as nrf:
+            nrd.state = state
+            nrd.save_to_db()
+        except NoResultFound as nrf:
             # not an error we need to track in the log
-            return jsonify({"message": "NR not found"}), 404
+            return jsonify({"message": "Request:{} not found".format(nr)}), 404
         except Exception as err:
             logging.log(logging.ERROR, "Error when patching NR:{0} Err:{1}".format(nr, err))
             return jsonify({"message": "NR not found"}), 404
 
-        nrd.status = state
-        nrd.save_to_db()
-
-        return '', 200
+        return jsonify({"message": "Request:{} - patched".format(nr)}), 200
 
     @staticmethod
     @cors.crossdomain(origin='*')
