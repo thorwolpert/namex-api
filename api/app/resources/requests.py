@@ -26,7 +26,10 @@ class Echo(Resource):
     @cors.crossdomain(origin='*')
     @oidc.accept_token(require_token=True)
     def get (*args, **kwargs):
-        return jsonify(g.oidc_token_info), 200
+        try:
+            return jsonify(g.oidc_token_info), 200
+        except Exception as err:
+            return {"error": "{}".format(err)}, 500
 
 
 @cors_preflight("GET")
