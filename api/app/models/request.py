@@ -139,11 +139,11 @@ class Request(db.Model):
         return cls.query.filter_by(nrNum=nr).one()
 
     def save_to_db(self):
-        if self.id is None:
+        # if self.id is None:
             # NR is not the primary key, but has to be a unique value.
-            seq = Sequence('nr_seq')
-            next_nr = db.engine.execute(seq)
-            self.nr = 'NR{0:0>8}'.format(next_nr)
+            # seq = Sequence('nr_seq')
+            # next_nr = db.engine.execute(seq)
+            # self.nr = 'NR{0:0>8}'.format(next_nr)
 
         db.session.add(self)
         db.session.commit()
@@ -190,7 +190,7 @@ class RequestsSchema(Schema):
     id = fields.Int(dump_only=True)
     nr = fields.String(dump_only=True)
     submitter = fields.String()
-    status = fields.String()
+    state = fields.String()
     staff = fields.String()
     corpType = fields.String()
     reqType = fields.String()
