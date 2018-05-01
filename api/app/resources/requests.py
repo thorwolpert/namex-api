@@ -131,10 +131,8 @@ class Request(Resource):
     @cors.crossdomain(origin='*')
     @oidc.accept_token(require_token=True)
     def patch(nr, *args, **kwargs):
-        nrd = RequestDAO.find_by_nr(nr)
-        if not nrd:
-            return jsonify({"message": "NR not found"}), 404
 
+        # do the cheap check first before the more expensive ones
         json_input = request.get_json()
         if not json_input:
             return jsonify({'message': 'No input data provided'}), 400
@@ -147,6 +145,17 @@ class Request(Resource):
 
         if state not in RequestDAO.VALID_STATES:
             return jsonify({"message": "not a valid state"}), 406
+
+        try:
+            nrd = RequestDAO.find_by_nr(nr)
+            if not nrd:
+                return jsonify({"message": "NR not found"}), 404
+        except exc.NoResultFound as nrf:
+            # not an error we need to track in the log
+            return jsonify({"message": "NR not found"}), 404
+        except Exception as err:
+            logging.log(logging.ERROR, "Error when patching NR:{0} Err:{1}".format(nr, err))
+            return jsonify({"message": "NR not found"}), 404
 
         nrd.status = state
         nrd.save_to_db()
