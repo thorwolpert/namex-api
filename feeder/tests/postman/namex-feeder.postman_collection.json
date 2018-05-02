@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "5f660cc1-bb1e-4e64-a4b9-a48204ab98fd",
-		"name": "namex-in",
+		"name": "namex-feeder",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -42,15 +42,14 @@
 					"raw": "{\"nameRequest\": \"{{nr_num}}\"}"
 				},
 				"url": {
-					"raw": "{{url}}/api/v1/nro-requests/",
+					"raw": "{{url}}/api/v1/nro-requests",
 					"host": [
 						"{{url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"nro-requests",
-						""
+						"nro-requests"
 					]
 				}
 			},
@@ -106,6 +105,28 @@
 				}
 			},
 			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "25cfcaf7-499d-48d9-8d3a-478a45e58152",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "3e53877a-cd2d-43db-825e-af3cacb82265",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
 		}
 	]
 }
