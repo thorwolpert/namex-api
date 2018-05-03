@@ -73,6 +73,8 @@ venv
 #########################
 *client_secrets.json
 *client_secrets.*.json
+/**/keycloak.json
+/**/keycloak.*.json
 
 # Postman
 ########################
