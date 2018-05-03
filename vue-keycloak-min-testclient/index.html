@@ -8,13 +8,18 @@
     <h1>Hello {{ userName }}.</h1>
     <p v-if="userName">You are logged in (<a href="#" @click="logout">logout</a>)</p>
       <h2> Fetch next NR: {{nrGetNext}}</h2>
+
+    <input v-model.lazy="nrNum" placeholder="lookup request">
+    <p>nr num is {{nrNum}}</p>
+
     <pre>{{nrInfo}}</pre>
   </div>
   
   <script src="js/keycloak.js"></script>
   <!-- script src="js/axios.min.js"></script -->
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script src="js/vue.min.js"></script>
+  <!-- script src="js/vue.min.js"></script -->
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <script>
     var keycloak = Keycloak();
 

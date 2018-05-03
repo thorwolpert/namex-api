@@ -5,17 +5,18 @@ create table nro_names_sync_job_status(
 
 create sequence nro_job_seq;
 
-create table nro_names_sync_job(
+create table nro_names_sync_job (
     id integer PRIMARY KEY DEFAULT nextval('nro_job_seq'),
     status_cd varchar(10),
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    req_last_update TIMESTAMP  WITH TIME ZONE,
+    end_time TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (status_cd) REFERENCES nro_names_sync_job_status (status_cd)
     );
 
 create sequence nro_job_det_seq;
 
-create table nro_names_sync_job_detail(
+create table nro_names_sync_job_detail (
     id integer PRIMARY KEY DEFAULT nextval('nro_job_det_seq'),
     job_id integer,
     nr_num varchar(10),

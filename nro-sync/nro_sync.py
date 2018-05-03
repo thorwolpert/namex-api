@@ -21,12 +21,14 @@ start_time = datetime.utcnow()
 
 pg_cur = pg_conn.cursor()
 
-pg_cur.execute("select nextval('nro_job_seq')")
-job_id = pg_cur.fetchone()[0]
+pg_cur.execute("select nextval('nro_job_seq'), max(req_last_update) from nro_names_sync_job;")
+jrow = pg_cur.fetchone()
+job_id = jrow[0]
+last_job_max_dt = jrow[1]
 state = 'running'
 
-pg_cur.execute("""insert into nro_names_sync_job (id, status_cd, start_time, end_time) values (%s, %s, %s, %s);""",
-               (job_id, state, start_time, 'epoch'))
+pg_cur.execute("""insert into nro_names_sync_job (id, status_cd, start_time) values (%s, %s, %s);""",
+               (job_id, state, start_time))
 pg_conn.commit()
 
 try:
@@ -36,13 +38,22 @@ try:
 
     pg_cur_track = pg_conn.cursor()
 
-    pg_cursor = pg_conn.cursor('serverside_cursor_name', cursor_factory=psycopg2.extras.DictCursor)
+    pg_upd_cursor = pg_conn.cursor()
+
+    pg_cursor = pg_conn.cursor('serverside_cursor_sel_nro', cursor_factory=psycopg2.extras.DictCursor)
     pg_cursor.execute("SELECT *, (SELECT username FROM users WHERE id=r.user_id) as username " +
-                      ",(last_update::date + integer '60') as expiry_date "
+                      ",(last_update::date + integer '60') as expiry_date " +
+                      ",COALESCE((select state from names where nr_id = r.id and choice = 1), 'NE') as p_choice1 " +
+                      ",COALESCE((select state from names where nr_id = r.id and choice = 2), 'NA') as p_choice2 " +
+                      ",COALESCE((select state from names where nr_id = r.id and choice = 3), 'NA') as p_choice3 " +
+                      ",nro_updated as updated "
                       "FROM requests r " +
-                      "WHERE state in ('APPROVED', 'REJECTED', 'CANCELLED')" +
-                      "  AND last_update >= 'epoch' " +
-                      "LIMIT " + Config.MAX_ROW_LIMIT
+                      "WHERE state in ('APPROVED', 'REJECTED')" +
+                      "  AND (nro_updated = 'N' " +
+                      "       OR nro_updated is NULL) " +
+                      " FOR UPDATE "
+                      "LIMIT %s",
+                      [Config.MAX_ROW_LIMIT]
                       )
 
     row_count = 0
@@ -52,15 +63,18 @@ try:
         try:
             ora_cursor.callproc("NRO_DATA_PUMP_PKG.name_examination",
                                     [pg_row['nr_num'],        #p_nr_number
-                                     pg_row['state'],         #p_status
+                                     pg_row['state'][0],      #p_status
                                      pg_row['expiry_date'],   #p_expiry_date
                                      pg_row['consent_flag'],  #p_consent_flag
                                      pg_row['username'],      #p_examiner_id
-                                     'NE',                    #p_choice1
-                                     'NA',                    #p_choice2
-                                     'NA',                    #p_choice3
+                                     pg_row['p_choice1'],     #p_choice1
+                                     pg_row['p_choice2'],     #p_choice2
+                                     pg_row['p_choice3'],     #p_choice3
                                      pg_row['admin_comment']] #p_exam_comment
                                 )
+
+            pg_upd_cursor.execute("""UPDATE requests SET nro_updated = %s WHERE id = %s""",
+                                  ['Y', pg_row['id']])
 
             pg_cur_track.execute(
                 """insert into nro_names_sync_job_detail (job_id, nr_num, time) values (%s, %s, %s);""",
@@ -91,7 +105,10 @@ except Exception as err:
     pg_conn.rollback()
 
 finally:
-    ora_con.close()
-    pg_conn.close()
+    if ora_con is not None:
+        ora_con.close()
+
+    if pg_conn is not None:
+        pg_conn.close()
 
 print("job - requests processed: {0} completed in:{1}".format(row_count, end_time-start_time))

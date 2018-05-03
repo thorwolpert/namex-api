@@ -50,6 +50,9 @@ class Request(db.Model):
     assumedNuansExpirationDate = db.Column('assumed_nuans_expiration_date', db.DateTime)
     lastNuansUpdateRole = db.Column('last_nuans_update_role', db.String(10))
 
+    #legacy sync tracking
+    nroUpdated = db.Column('nro_updated', db.String(1), default='N')
+
     # Relationship
     names = db.relationship('Name', lazy='dynamic')
 
