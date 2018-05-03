@@ -1,0 +1,10 @@
+{
+  "realm": "<your realm>",
+  "auth-server-url": "https://<your auth server>/auth",
+  "ssl-required": "external",
+  "resource": "<your client id>",
+  "credentials": {
+    "secret": "<shh your secret - sorta as anyone can see it>"
+  },
+  "use-resource-role-mappings": true
+}
