@@ -21,10 +21,8 @@ start_time = datetime.utcnow()
 
 pg_cur = pg_conn.cursor()
 
-pg_cur.execute("select nextval('nro_job_seq'), max(req_last_update) from nro_names_sync_job;")
-jrow = pg_cur.fetchone()
-job_id = jrow[0]
-last_job_max_dt = jrow[1]
+pg_cur.execute("select nextval('nro_job_seq');")
+job_id = pg_cur.fetchone()[0]
 state = 'running'
 
 pg_cur.execute("""insert into nro_names_sync_job (id, status_cd, start_time) values (%s, %s, %s);""",
@@ -41,19 +39,20 @@ try:
     pg_upd_cursor = pg_conn.cursor()
 
     pg_cursor = pg_conn.cursor('serverside_cursor_sel_nro', cursor_factory=psycopg2.extras.DictCursor)
-    pg_cursor.execute("SELECT *, (SELECT username FROM users WHERE id=r.user_id) as username " +
+    pg_cursor.execute("SELECT * " +
+                      ",(SELECT username FROM users WHERE id=r.user_id) as username " +
                       ",(last_update::date + integer '60') as expiry_date " +
                       ",COALESCE((select state from names where nr_id = r.id and choice = 1), 'NE') as p_choice1 " +
                       ",COALESCE((select state from names where nr_id = r.id and choice = 2), 'NA') as p_choice2 " +
                       ",COALESCE((select state from names where nr_id = r.id and choice = 3), 'NA') as p_choice3 " +
-                      ",nro_updated as updated "
                       "FROM requests r " +
-                      "WHERE state in ('APPROVED', 'REJECTED')" +
-                      "  AND (nro_updated = 'N' " +
+                      "WHERE state in ('APPROVED', 'REJECTED') " +
+                      "  AND last_update <= current_timestamp - (%s ||' minutes')::interval "
+                      "  AND (nro_updated != 'Y' " +
                       "       OR nro_updated is NULL) " +
                       " FOR UPDATE "
                       "LIMIT %s",
-                      [Config.MAX_ROW_LIMIT]
+                      [Config.MIN_DELAY_MINUTES, Config.MAX_ROW_LIMIT]
                       )
 
     row_count = 0

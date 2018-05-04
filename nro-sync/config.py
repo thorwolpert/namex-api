@@ -4,6 +4,7 @@ import os
 class Config(object):
 
     MAX_ROW_LIMIT = os.getenv('MAX_ROWS','1000')
+    MIN_DELAY_MINUTES = os.getenv('MIN_DELAY_MINUTES','10')
 
     # POSTGRESQL
     PG_USER = os.getenv('PG_USER', '')
