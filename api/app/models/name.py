@@ -1,6 +1,6 @@
 """Name hold a name choice for a Request
 """
-from app import db
+from app import db, ma
 
 class Name(db.Model):
     __tablename__ = 'names'
@@ -13,14 +13,15 @@ class Name(db.Model):
     remoteNameId = db.Column('remote_name_id', db.BigInteger)
 
     nrId = db.Column('nr_id', db.Integer, db.ForeignKey('requests.id'))
-    nameRequest = db.relationship('Request')
+    # nameRequest = db.relationship('Request')
 
-    def __init__(self, name, choice, consumptionDate, remoteNameId, nrId):
-        self.name = name
-        self.choice = choice
-        self.nrId = nrId
-        self.consumptionDate = consumptionDate
-        self.remoteNameId = remoteNameId
+    # def __init__(self, *args, **kwargs):
+    #     self.name = name
+    #     self.state = state
+    #     self.choice = choice
+    #     self.nrId = nrId
+    #     self.consumptionDate = consumptionDate
+    #     self.remoteNameId = remoteNameId
 
     def json(self):
         return {"name": self.name, "choice": self.choice, "state": self.state, "consumptionDate": self.consumptionDate }
@@ -36,3 +37,8 @@ class Name(db.Model):
     def delete_from_db(self):
         db.session.delete(self)
         db.session.commit()
+
+class NameSchema(ma.ModelSchema):
+    class Meta:
+        model = Name
+        # fields = ('choice', 'name', 'state')

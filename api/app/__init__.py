@@ -9,6 +9,7 @@ import logging
 from flask import Flask
 from flask_restplus import Api
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from config import Config
 from app.patches.flask_oidc_patched import OpenIDConnect
 
@@ -18,6 +19,7 @@ db = SQLAlchemy()
 application = Flask(__name__, instance_relative_config=True)
 application.config.from_object(Config)
 db.init_app(application)
+ma = Marshmallow(application)
 
 api = Api(application, prefix='/api/v1')
 

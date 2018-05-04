@@ -52,7 +52,7 @@ class User(db.Model):
 
     @classmethod
     def find_by_username(cls, username):
-        return cls.query.filter_by(username=username).first()
+        return cls.query.filter_by(username=username).one_or_none()
 
     def save_to_db(self):
         db.session.add(self)
@@ -62,25 +62,25 @@ class User(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-class UserSchema(Schema):
-    id = fields.Int(dump_only=True)
-    username = fields.String()
-    firstname = fields.String()
-    lastname = fields.String()
-    sub = fields.String()
-    iss = fields.String()
-    creationDate = fields.DateTime()
-
-    # We use make_object to create a new User from validated data
-    @post_load
-    def make_object(self, data):
-        if not data:
-            return None
-        return User(username=data['username'],
-                    firstname=data['firstname'],
-                    lastname=data['lastname'],
-                    sub=data['sub'],
-                    iss=data['iss'])
+# class UserSchema(Schema):
+#     id = fields.Int(dump_only=True)
+#     username = fields.String()
+#     firstname = fields.String()
+#     lastname = fields.String()
+#     sub = fields.String()
+#     iss = fields.String()
+#     creationDate = fields.DateTime()
+#
+#     We use make_object to create a new User from validated data
+    # @post_load
+    # def make_object(self, data):
+    #     if not data:
+    #         return None
+    #     return User(username=data['username'],
+    #                 firstname=data['firstname'],
+    #                 lastname=data['lastname'],
+    #                 sub=data['sub'],
+    #                 iss=data['iss'])
 
 class KeycloakUserSchema(Schema):
     id = fields.Int(dump_only=True)

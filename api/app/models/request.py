@@ -1,9 +1,10 @@
 """Request is the main business class that is the real top level object in the system
 """
-from app import db
+from app import db, ma
 from app.exceptions import BusinessException
 from sqlalchemy import Sequence
 from marshmallow import Schema, fields, post_load
+from app.models import Name, NameSchema
 from datetime import datetime
 import logging
 
@@ -18,7 +19,7 @@ class Request(db.Model):
     # core fields
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    lastUpdate = db.Column('last_update', db.DateTime, default=datetime.utcnow)
+    lastUpdate = db.Column('last_update', db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     state = db.Column(db.String(40), default='DRAFT')
     nrNum = db.Column('nr_num', db.String(10), unique=True)
     adminComment = db.Column('admin_comment', db.String(1000))
@@ -57,8 +58,7 @@ class Request(db.Model):
     names = db.relationship('Name', lazy='dynamic')
 
     userId = db.Column('user_id', db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship('User')
-
+    # user = db.relationship('User')
 
     ##### end of table definitions
 
@@ -71,6 +71,7 @@ class Request(db.Model):
     STATE_REJECTED = 'REJECTED'
     STATE_CONDITIONAL = 'CONDITIONAL'
     VALID_STATES = { STATE_DRAFT, STATE_INPROGRESS, STATE_CANCELLED, STATE_HOLD, STATE_APPROVED, STATE_REJECTED, STATE_CONDITIONAL }
+    RELEASE_STATES = { STATE_DRAFT, STATE_CANCELLED, STATE_HOLD, STATE_APPROVED, STATE_REJECTED, STATE_CONDITIONAL }
 
 
     def __init__(self, timestamp, lastUpdate, state, nrNum, userId, adminComment, applicant, phoneNumber, contact, abPartner, skPartner, consentFlag, examComment, expiryDate, requestId, requestTypeCd, priorityCd, tilmaInd, tilmaTransactionId, xproJurisdiction, additionalInfo, natureBusinessInfo, userNote, nuansNum, nuansExpirationDate, assumedNuansNum, assumedNuansName, assumedNuansExpirationDate, lastNuansUpdateRole):
@@ -139,7 +140,7 @@ class Request(db.Model):
 
     @classmethod
     def find_by_nr(cls, nr):
-        return cls.query.filter_by(nrNum=nr).one()
+        return cls.query.filter_by(nrNum=nr).one_or_none()
 
     def save_to_db(self):
         # if self.id is None:
@@ -168,7 +169,7 @@ class Request(db.Model):
         existing_nr = db.session.query(Request).\
             filter(Request.userId == userObj.id, Request.state == Request.STATE_INPROGRESS).\
             order_by(Request.timestamp.asc()).\
-            first()
+            one_or_none()
 
         if existing_nr:
             return existing_nr.nrNum
@@ -188,21 +189,22 @@ class Request(db.Model):
         # db.session.close()
         return r.nrNum
 
+    @classmethod
+    def get_inprogress(cls, userObj):
+        """Gets the Next NR# from the database
+           where the STATUS == INPROGRESS
+           and assigned to the user
+        """
+        existing_nr = db.session.query(Request).\
+            filter(Request.userId == userObj.id, Request.state == Request.STATE_INPROGRESS).\
+            order_by(Request.timestamp.asc()).\
+            one_or_none()
 
-class RequestsSchema(Schema):
-    id = fields.Int(dump_only=True)
-    nr = fields.String(dump_only=True)
-    submitter = fields.String()
-    state = fields.String()
-    staff = fields.String()
-    corpType = fields.String()
-    reqType = fields.String()
+        return existing_nr
 
-    # We use make_object to create a new Request from validated data
-    @post_load
-    def make_object(self, data):
-        if not data:
-            return None
-        return Request(submitter=data['submitter'],
-                       corpType=data['corpType'],
-                       reqType=data['reqType'])
+
+class RequestsSchema(ma.ModelSchema):
+    class Meta:
+        model = Request
+
+    names = ma.Nested(NameSchema, many=True)
