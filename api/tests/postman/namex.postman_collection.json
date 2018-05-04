@@ -96,6 +96,146 @@
 			"response": []
 		},
 		{
+			"name": "healthz",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "2b3cd3b3-dec2-4b39-81c9-e406b63793ac",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"",
+							"pm.test(\"api is healthy\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql('api is healthy');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/api/v1/healthz",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"healthz"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "readyz",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "ceec5748-a38a-4b7d-afab-ae773e30484e",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"",
+							"pm.test(\"api is healthy\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql('api is ready');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/api/v1/readyz",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"readyz"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "echo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "ceec5748-a38a-4b7d-afab-ae773e30484e",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"",
+							"pm.test(\"api is healthy\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql('api is ready');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/api/v1/echo",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"echo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "requests/queues/@me/oldest",
 			"event": [
 				{
@@ -128,7 +268,13 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer {{token}}"
+						"value": "Bearer {{token}}",
+						"disabled": true
+					},
+					{
+						"key": "Accepts",
+						"value": "application/json",
+						"disabled": true
 					}
 				],
 				"body": {},
@@ -229,6 +375,39 @@
 			"response": []
 		},
 		{
+			"name": "requests/NR00000001",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"state\": \"INPROGRESS\"}"
+				},
+				"url": {
+					"raw": "{{url}}/api/v1/requests/NR00000001",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"requests",
+						"NR00000001"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "/requests - create 007",
 			"request": {
 				"method": "POST",
@@ -276,10 +455,10 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"submitter\": \"thor\",\n\t\"corpType\": \"INC\",\n\t\"reqType\": \"NEW\"\n}"
+					"raw": "{\n    \"abPartner\": \"ab_partner\",\n    \"additionalInfo\": null,\n    \"adminComment\": null,\n    \"applicant\": \"New CEO\",\n    \"assumedNuansExpirationDate\": null,\n    \"assumedNuansName\": null,\n    \"assumedNuansNum\": null,\n    \"consentFlag\": null,\n    \"contact\": \"Contact\",\n    \"examComment\": null,\n    \"expiryDate\": null,\n    \"id\": 1,\n    \"lastNuansUpdateRole\": null,\n    \"lastUpdate\": \"Mon, 02 Apr 2018 20:09:03 GMT\",\n    \"names\": [\n        {\n            \"choice\": 1,\n            \"consumptionDate\": null,\n            \"name\": \"my good company\",\n            \"state\": \"DRAFT\"\n        }\n        ],\n    \"natureBusinessInfo\": \"fire hydrants manufacture\",\n    \"nrNum\": \"NR00000001\",\n    \"nuansExpirationDate\": null,\n    \"nuansNum\": null,\n    \"phoneNumber\": \"2501112222\",\n    \"priorityCd\": null,\n    \"requestId\": null,\n    \"requestTypeCd\": null,\n    \"skPartner\": \"sk_partner\",\n    \"state\": \"HOLD\",\n    \"tilmaInd\": null,\n    \"tilmaTransactionId\": null,\n    \"timestamp\": \"Mon, 02 Apr 2018 20:09:03 GMT\",\n    \"userId\": 1,\n    \"userNote\": null,\n    \"xproJurisdiction\": null\n}"
 				},
 				"url": {
-					"raw": "{{url}}/api/v1/requests/NR00000001",
+					"raw": "{{url}}/api/v1/requests/NR00000002",
 					"host": [
 						"{{url}}"
 					],
@@ -287,7 +466,7 @@
 						"api",
 						"v1",
 						"requests",
-						"NR00000001"
+						"NR00000002"
 					]
 				}
 			},
